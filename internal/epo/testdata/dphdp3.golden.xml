@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Pisemnost>
+  <DPHDP3>
+    <VetaD d_poddp="20.09.2026" dapdph_forma="B" dokument="DP3" k_uladis="DPH" mesic="8" rok="2026" trans="A" typ_platce="P" c_okec="62010"></VetaD>
+    <VetaP c_ufo="451" c_pracufo="2001" dic="9001010007" jmeno="Jan" prijmeni="Novák" ulice="Dlouhá" c_pop="1" c_orient="2" naz_obce="Praha" psc="11000" stat="ČESKÁ REPUBLIKA" typ_ds="F" c_telef="+420123456789" email="jan@example.cz"></VetaP>
+    <Veta1 obrat23="11000" dan23="2310"></Veta1>
+    <Veta6 dan_zocelk="2310" odp_zocelk="0" dano_da="2310"></Veta6>
+  </DPHDP3>
+</Pisemnost>

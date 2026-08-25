@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Pisemnost>
+  <DPHKH1>
+    <VetaD dokument="KH1" k_uladis="DPH" mesic="8" rok="2026" d_poddp="20.09.2026" khdph_forma="B"></VetaD>
+    <VetaP c_ufo="451" c_pracufo="2001" dic="9001010007" jmeno="Jan" prijmeni="Novák" ulice="Dlouhá" c_pop="1" c_orient="2" naz_obce="Praha" psc="11000" stat="ČESKÁ REPUBLIKA" typ_ds="F" c_telef="+420123456789" email="jan@example.cz"></VetaP>
+    <VetaA4 dic_odb="27082440" c_evid_dd="FV-A4" dppd="15.08.2026" zakl_dane1="10000.00" dan1="2100.00" kod_rezim_pl="0" zdph_44="N"></VetaA4>
+    <VetaA5 zakl_dane1="1000.00" dan1="210.00"></VetaA5>
+    <VetaC obrat23="11000.00"></VetaC>
+  </DPHKH1>
+</Pisemnost>

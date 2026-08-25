@@ -8,6 +8,31 @@ jediná binárka bez CGO na macOS, Linuxu a Windows.
 > tuzemské vydané faktury v CZK se sazbou 21 %. Neumí přijaté faktury a
 > odpočty, dobropisy, zálohy, přenesenou povinnost ani jiné sazby či režimy.
 
+## Ukázka
+
+Všechny údaje na snímcích jsou syntetické. Terminálové obrazovky pocházejí
+z reálně spuštěné aplikace se dvěma ukázkovými QR Fakturami.
+
+### Profil plátce
+
+![Úprava syntetického profilu Jana Nováka v dphcko](docs/images/dphcko-profile.png)
+
+### Načtené faktury a ovládání
+
+![Přehled načtených faktur v dphcko](docs/images/dphcko-dashboard.png)
+
+![Rozbalená klávesová nápověda v dphcko](docs/images/dphcko-help.png)
+
+### Výsledek po načtení do MOJE daně
+
+Následující dvě obrazovky jsou ilustrační vizualizace podle syntetických XML,
+která byla skutečně načtena do MOJE daně. Nejde o kopie ani součást oficiálního
+portálu; proto jsou přímo v obraze označené jako ilustrační ukázka.
+
+![Ilustrační ukázka přiznání k DPH načteného v MOJE daně](docs/images/moje-dane-dph.png)
+
+![Ilustrační ukázka kontrolního hlášení načteného v MOJE daně](docs/images/moje-dane-kh.png)
+
 ## Použití
 
 1. Stáhněte archiv pro svůj systém z GitHub Releases a rozbalte binárku.

@@ -8,6 +8,29 @@ jediná binárka bez CGO na macOS, Linuxu a Windows.
 > tuzemské vydané faktury v CZK se sazbou 21 %. Neumí přijaté faktury a
 > odpočty, dobropisy, zálohy, přenesenou povinnost ani jiné sazby či režimy.
 
+## Funkce
+
+- [x] Jediná lokální binárka bez CGO pro macOS, Linux a Windows.
+- [x] Interaktivní terminálové rozhraní ovládané klávesnicí.
+- [x] Průvodce prvním spuštěním s předvyplněním veřejných údajů z ARES a
+      možností ručního zadání při nedostupnosti služby.
+- [x] Lokální profil plátce v čitelném `dphcko.toml`, který lze později upravit.
+- [x] Zakládání a přepínání měsíčních zdaňovacích období ve složkách `RRRR/MM`.
+- [x] Načtení vydaných PDF faktur z QR Faktury nebo QR Platby+F bez OCR a cloudu.
+- [x] Kontrola DIČ výstavce, CZK, sazby 21 %, DUZP, částek, duplicit a
+      nepodporovaných typů dokladů.
+- [x] Automatické rozdělení dokladů do A.4 a A.5 kontrolního hlášení včetně
+      hranice 10 000 Kč a potvrzení koncového spotřebitele.
+- [x] Generování přiznání `DPHDP3`, kontrolního hlášení `DPHKH1` a čitelného
+      textového přehledu za období.
+- [x] Kontrolní součty, korunové zaokrouhlení přiznání a zachování haléřů v KH.
+- [x] Nulové přiznání za období bez dokladů; prázdné KH se nevytváří.
+- [x] Atomický zápis výstupů s omezenými oprávněními a bez odesílání dat mimo
+      počítač uživatele.
+- [x] Otevření stránky MOJE daně pro ruční načtení vygenerovaných XML.
+- [x] Automatické testy, validace proti XSD, CodeQL a multiplatformní buildy
+      a release archivy na GitHubu.
+
 ## Ukázka
 
 Všechny údaje na snímcích jsou syntetické. Terminálové obrazovky pocházejí

@@ -51,12 +51,12 @@ func main() {
 			}
 			notice = "Založena složka " + created.String() + ". Vložte do ní PDF faktury."
 		case ui.ActionConfig:
-			updated, err := ui.RunProfileWizard(root, &cfg)
+			updated, saved, err := ui.RunProfileEditor(root, cfg)
 			if err != nil {
-				if errors.Is(err, huh.ErrUserAborted) {
-					continue
-				}
 				notice = "Chyba konfigurace: " + err.Error()
+				continue
+			}
+			if !saved {
 				continue
 			}
 			cfg = updated

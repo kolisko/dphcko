@@ -14,7 +14,8 @@ jediná binárka bez CGO na macOS, Linuxu a Windows.
 - [x] Interaktivní terminálové rozhraní ovládané klávesnicí.
 - [x] Průvodce prvním spuštěním s předvyplněním veřejných údajů z ARES a
       možností ručního zadání při nedostupnosti služby.
-- [x] Lokální profil plátce v čitelném `dphcko.toml`, který lze později upravit.
+- [x] Lokální profil plátce v čitelném `dphcko.toml` a celoobrazovkový editor,
+      který ukáže všechna pole i neuložené změny.
 - [x] Zakládání a přepínání měsíčních zdaňovacích období ve složkách `RRRR/MM`.
 - [x] Načtení vydaných PDF faktur z QR Faktury nebo QR Platby+F bez OCR a cloudu.
 - [x] Kontrola DIČ výstavce, CZK, sazby 21 %, DUZP, částek, duplicit a
@@ -36,15 +37,20 @@ jediná binárka bez CGO na macOS, Linuxu a Windows.
 Všechny údaje na snímcích jsou syntetické. Terminálové obrazovky pocházejí
 z reálně spuštěné aplikace se dvěma ukázkovými QR Fakturami.
 
-### Profil plátce
+### První nastavení profilu
 
-![Úprava syntetického profilu Jana Nováka v dphcko](docs/images/dphcko-profile.png)
+![První nastavení syntetického profilu Jana Nováka v dphcko](docs/images/dphcko-profile.png)
+
+### Profil a nastavení
+
+Editor ukazuje celý uložený profil najednou. Rozpracované hodnoty barevně
+odliší a před uložením je znovu zkontroluje.
+
+![Editor syntetického profilu Jana Nováka se zvýrazněnou změnou](docs/images/dphcko-profile-editor.png)
 
 ### Načtené faktury a ovládání
 
 ![Přehled načtených faktur v dphcko](docs/images/dphcko-dashboard.png)
-
-![Rozbalená klávesová nápověda v dphcko](docs/images/dphcko-help.png)
 
 ### Výsledek po načtení do MOJE daně
 
@@ -67,7 +73,9 @@ portálu; proto jsou přímo v obraze označené jako ilustrační ukázka.
 5. `r` faktury znovu načte a `g` nebo Enter spustí závěrečnou kontrolu a
    generování. Potom otevře ve výchozím prohlížeči obecnou stránku EPO pro
    ruční načtení XML. Klávesa `o` tuto stránku kdykoliv znovu otevře bez
-   opakovaného generování.
+   opakovaného generování. Klávesa `c` otevře celý profil; šipkami nebo Tabem
+   se přechází mezi poli, Enter či `Ctrl+S` změny uloží a Esc editor zavře bez
+   uložení.
 
 Výstupy vzniknou v `RRRR/MM/vystup/`:
 
@@ -103,8 +111,11 @@ Náměty pro další verze; pořadí není závazný plán vydání:
 - [ ] Plnění v EU: dodání a pořízení zboží, služby a souhrnné hlášení.
 - [ ] Dovoz, vývoz a další plnění se třetími zeměmi.
 - [ ] Faktury v cizích měnách včetně použití správného kurzu.
-- [ ] Čtvrtletní zdaňovací období.
-- [ ] Právnické osoby a více samostatných profilů plátce.
+- [ ] Čtvrtletní zdaňovací období fyzické osoby: volba měsíčního/čtvrtletního
+      režimu v profilu, společné zpracování tří měsíců a správné čtvrtletní
+      záhlaví v přiznání k DPH i kontrolním hlášení.
+- [ ] Právnické osoby.
+- [ ] Multiprofil: správa a přepínání více plátců s různými IČO a DIČ.
 - [ ] Opravná a dodatečná přiznání a následná kontrolní hlášení.
 - [ ] Ruční doplnění dokladu, OCR a import faktur bez QR Faktury.
 - [ ] Další vstupní formáty a napojení na fakturační nebo účetní systémy.

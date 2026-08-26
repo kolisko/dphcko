@@ -117,13 +117,28 @@ payloadem `X-INV`. Bez ní se doklad odmítne; aplikace nepoužívá OCR, cloud 
 odhady. Kontroluje DIČ výstavce, CZK, 21% daň, DUZP, součty, duplicity a
 podporovaný typ dokladu.
 
-Takový kód umí na vydaných PDF fakturách generovat například
-[iDoklad](https://www.idoklad.cz/podpora/karta-faktury). Jeho
-[tarif Zdarma](https://www.idoklad.cz/cenik) aktuálně umožňuje vystavování
-faktur nejvýše pěti odběratelům. Při výběru jiného bezplatného fakturačního
-programu ověřte, že výslovně podporuje **QR Fakturu** nebo **QR Platba+F**.
-Samotná **QR Platba**, která obsahuje jen údaje pro bankovní převod, aplikaci
-`dphcko` nestačí.
+Kompatibilní kód nevytváří jen jeden konkrétní program. Z oficiální dokumentace
+jsou ověřené například tyto bezplatné nebo omezené bezplatné varianty:
+
+- [PROFIT FREE](https://www.lpsoft.cz/profit.htm) je freeware a umí na faktury
+  vkládat [QR Fakturu i QR Platbu+F](https://www.lpsoft.cz/qrfaktura.htm).
+- [mPOHODA Start](https://www.stormware.cz/demoverze/) je webová a mobilní
+  varianta zdarma s limity; podporuje [QR Fakturu a při platbě převodem také
+  QR Platbu+F](https://www.stormware.cz/mblog/qr-platba-a-faktura/).
+- [Money S3 Start](https://money.cz/cenik-s3/vyzkouset-money-s3-start/) lze
+  bezplatně používat po omezenou zkušební dobu a generuje
+  [QR Fakturu i QR Platbu+F](https://money.cz/wp-content/uploads/2025/05/pracujeme_s_money_s3.pdf).
+- [Faktury Web](https://www.fakturyweb.cz/cenik) nabízí první rok zdarma a mezi
+  formáty QR kódu má také
+  [QR Platbu+F](https://www.fakturyweb.cz/faktury-web-api/manual).
+- [iDoklad Zdarma](https://www.idoklad.cz/cenik) umožňuje fakturovat nejvýše
+  pěti odběratelům a podporuje
+  [QR Fakturu i QR Platbu+F](https://www.idoklad.cz/podpora/karta-faktury).
+
+Nejde o žebříček ani doporučení konkrétní služby a podmínky bezplatných variant
+se mohou měnit. Při výběru vždy ověřte výslovnou podporu **QR Faktury** nebo
+**QR Platby+F** (oficiální název kombinovaného formátu). Samotná **QR Platba**
+obsahuje pouze údaje pro bankovní převod a aplikaci `dphcko` nestačí.
 
 Doklady do 10 000 Kč včetně DPH patří do A.5. Vyšší doklad s DIČ
 odběratele patří do A.4. U vyššího dokladu bez DIČ musí uživatel výslovně

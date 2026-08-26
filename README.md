@@ -8,6 +8,54 @@ jediná binárka bez CGO na macOS, Linuxu a Windows.
 > tuzemské vydané faktury v CZK se sazbou 21 %. Neumí přijaté faktury a
 > odpočty, dobropisy, zálohy, přenesenou povinnost ani jiné sazby či režimy.
 
+## Funkce
+
+- [x] Jediná lokální binárka bez CGO pro macOS, Linux a Windows.
+- [x] Interaktivní terminálové rozhraní ovládané klávesnicí.
+- [x] Průvodce prvním spuštěním s předvyplněním veřejných údajů z ARES a
+      možností ručního zadání při nedostupnosti služby.
+- [x] Lokální profil plátce v čitelném `dphcko.toml`, který lze později upravit.
+- [x] Zakládání a přepínání měsíčních zdaňovacích období ve složkách `RRRR/MM`.
+- [x] Načtení vydaných PDF faktur z QR Faktury nebo QR Platby+F bez OCR a cloudu.
+- [x] Kontrola DIČ výstavce, CZK, sazby 21 %, DUZP, částek, duplicit a
+      nepodporovaných typů dokladů.
+- [x] Automatické rozdělení dokladů do A.4 a A.5 kontrolního hlášení včetně
+      hranice 10 000 Kč a potvrzení koncového spotřebitele.
+- [x] Generování přiznání `DPHDP3`, kontrolního hlášení `DPHKH1` a čitelného
+      textového přehledu za období.
+- [x] Kontrolní součty, korunové zaokrouhlení přiznání a zachování haléřů v KH.
+- [x] Nulové přiznání za období bez dokladů; prázdné KH se nevytváří.
+- [x] Atomický zápis výstupů s omezenými oprávněními a bez odesílání dat mimo
+      počítač uživatele.
+- [x] Otevření stránky MOJE daně pro ruční načtení vygenerovaných XML.
+- [x] Automatické testy, validace proti XSD, CodeQL a multiplatformní buildy
+      a release archivy na GitHubu.
+
+## Ukázka
+
+Všechny údaje na snímcích jsou syntetické. Terminálové obrazovky pocházejí
+z reálně spuštěné aplikace se dvěma ukázkovými QR Fakturami.
+
+### Profil plátce
+
+![Úprava syntetického profilu Jana Nováka v dphcko](docs/images/dphcko-profile.png)
+
+### Načtené faktury a ovládání
+
+![Přehled načtených faktur v dphcko](docs/images/dphcko-dashboard.png)
+
+![Rozbalená klávesová nápověda v dphcko](docs/images/dphcko-help.png)
+
+### Výsledek po načtení do MOJE daně
+
+Následující dvě obrazovky jsou ilustrační vizualizace podle syntetických XML,
+která byla skutečně načtena do MOJE daně. Nejde o kopie ani součást oficiálního
+portálu; proto jsou přímo v obraze označené jako ilustrační ukázka.
+
+![Ilustrační ukázka přiznání k DPH načteného v MOJE daně](docs/images/moje-dane-dph.png)
+
+![Ilustrační ukázka kontrolního hlášení načteného v MOJE daně](docs/images/moje-dane-kh.png)
+
 ## Použití
 
 1. Stáhněte archiv pro svůj systém z GitHub Releases a rozbalte binárku.
@@ -42,6 +90,26 @@ podporovaný typ dokladu.
 Doklady do 10 000 Kč včetně DPH patří do A.5. Vyšší doklad s DIČ
 odběratele patří do A.4. U vyššího dokladu bez DIČ musí uživatel výslovně
 potvrdit koncového spotřebitele, jinak se generování zastaví.
+
+## TODO
+
+Náměty pro další verze; pořadí není závazný plán vydání:
+
+- [ ] Přijaté tuzemské faktury, odpočet DPH a odpovídající oddíly B.2/B.3 KH.
+- [ ] Dobropisy, vrubopisy a opravy základu nebo výše daně.
+- [ ] Zálohové faktury a daňové doklady k přijatým či poskytnutým platbám.
+- [ ] Snížená sazba DPH, osvobozená plnění a souběh více sazeb na jednom dokladu.
+- [ ] Tuzemský režim přenesení daňové povinnosti.
+- [ ] Plnění v EU: dodání a pořízení zboží, služby a souhrnné hlášení.
+- [ ] Dovoz, vývoz a další plnění se třetími zeměmi.
+- [ ] Faktury v cizích měnách včetně použití správného kurzu.
+- [ ] Čtvrtletní zdaňovací období.
+- [ ] Právnické osoby a více samostatných profilů plátce.
+- [ ] Opravná a dodatečná přiznání a následná kontrolní hlášení.
+- [ ] Ruční doplnění dokladu, OCR a import faktur bez QR Faktury.
+- [ ] Další vstupní formáty a napojení na fakturační nebo účetní systémy.
+- [ ] Přímé bezpečné načtení, podepsání a odeslání podání do EPO.
+- [ ] Aktualizace XML schémat a číselníků bez nutnosti nové verze aplikace.
 
 ## Vývoj
 

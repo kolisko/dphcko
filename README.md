@@ -34,8 +34,9 @@ jediná binárka bez CGO na macOS, Linuxu a Windows.
 
 ## Ukázka
 
-Všechny údaje na snímcích jsou syntetické. Terminálové obrazovky pocházejí
-z reálně spuštěné aplikace se dvěma ukázkovými QR Fakturami.
+Všechny údaje v ukázce jsou syntetické. Terminálové obrazovky pocházejí
+z reálně spuštěné aplikace se dvěma ukázkovými PDF fakturami. Stejné faktury
+jsou zdrojem testovacích XML a obrazovek portálu MOJE daně níže.
 
 ### První nastavení profilu
 
@@ -47,6 +48,22 @@ Editor ukazuje celý uložený profil najednou. Rozpracované hodnoty barevně
 odliší a před uložením je znovu zkontroluje.
 
 ![Editor syntetického profilu Jana Nováka se zvýrazněnou změnou](docs/images/dphcko-profile-editor.png)
+
+### Vstupní PDF faktury
+
+Obě faktury obsahují skutečně dekódovatelnou QR Fakturu a lze je použít pro
+vyzkoušení aplikace. První doklad za 1 210 Kč bez DIČ odběratele vstupuje do
+A.5, druhý za 12 100 Kč s DIČ odběratele do A.4. Dohromady tvoří základ
+11 000 Kč a DPH 2 310 Kč zobrazené v přiznání níže. PNG náhledy jsou přímé
+rendery celých stran uložených PDF bez dalších úprav.
+
+[Stáhnout ukázkovou fakturu FV-2026-08-001](docs/examples/Faktura-FV-2026-08-001.pdf)
+
+![Ukázková PDF faktura FV-2026-08-001 pro oddíl A.5](docs/images/faktura-FV-2026-08-001.png)
+
+[Stáhnout ukázkovou fakturu FV-2026-08-002](docs/examples/Faktura-FV-2026-08-002.pdf)
+
+![Ukázková PDF faktura FV-2026-08-002 pro oddíl A.4](docs/images/faktura-FV-2026-08-002.png)
 
 ### Načtené faktury a ovládání
 
@@ -96,6 +113,14 @@ Každé PDF musí obsahovat čitelnou QR Fakturu, případně QR Platbu+F s vlo�
 payloadem `X-INV`. Bez ní se doklad odmítne; aplikace nepoužívá OCR, cloud ani
 odhady. Kontroluje DIČ výstavce, CZK, 21% daň, DUZP, součty, duplicity a
 podporovaný typ dokladu.
+
+Takový kód umí na vydaných PDF fakturách generovat například
+[iDoklad](https://www.idoklad.cz/podpora/karta-faktury). Jeho
+[tarif Zdarma](https://www.idoklad.cz/cenik) aktuálně umožňuje vystavování
+faktur nejvýše pěti odběratelům. Při výběru jiného bezplatného fakturačního
+programu ověřte, že výslovně podporuje **QR Fakturu** nebo **QR Platba+F**.
+Samotná **QR Platba**, která obsahuje jen údaje pro bankovní převod, aplikaci
+`dphcko` nestačí.
 
 Doklady do 10 000 Kč včetně DPH patří do A.5. Vyšší doklad s DIČ
 odběratele patří do A.4. U vyššího dokladu bez DIČ musí uživatel výslovně

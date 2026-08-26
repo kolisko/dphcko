@@ -22,11 +22,18 @@ func testProfile() config.Profile {
 
 func testSummary(t *testing.T) tax.Summary {
 	t.Helper()
-	date := time.Date(2026, 8, 15, 0, 0, 0, 0, time.UTC)
-	summary, err := tax.Build([]invoice.Invoice{
-		{Number: "FV-A5", TaxableDate: date, TaxBase: 100000, Tax: 21000, Total: 121000},
-		{Number: "FV-A4", RecipientVATID: "CZ27082440", TaxableDate: date, TaxBase: 1000000, Tax: 210000, Total: 1210000},
-	})
+	var invoices []invoice.Invoice
+	for _, name := range []string{
+		"Faktura-FV-2026-08-001.pdf",
+		"Faktura-FV-2026-08-002.pdf",
+	} {
+		decoded, err := invoice.DecodePDF(filepath.Join("..", "..", "docs", "examples", name))
+		if err != nil {
+			t.Fatalf("ukázkovou fakturu %s nelze načíst: %v", name, err)
+		}
+		invoices = append(invoices, decoded)
+	}
+	summary, err := tax.Build(invoices)
 	if err != nil {
 		t.Fatal(err)
 	}

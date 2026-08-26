@@ -9,7 +9,7 @@ require (
 	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/pdfcpu/pdfcpu v0.15.0
 	github.com/pelletier/go-toml/v2 v2.4.3
-	golang.org/x/image v0.44.0
+	golang.org/x/image v0.45.0
 )
 
 require (
@@ -38,6 +38,6 @@ require (
 	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.40.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 )

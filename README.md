@@ -68,6 +68,26 @@ Doklady do 10 000 Kč včetně DPH patří do A.5. Vyšší doklad s DIČ
 odběratele patří do A.4. U vyššího dokladu bez DIČ musí uživatel výslovně
 potvrdit koncového spotřebitele, jinak se generování zastaví.
 
+## TODO
+
+Náměty pro další verze; pořadí není závazný plán vydání:
+
+- [ ] Přijaté tuzemské faktury, odpočet DPH a odpovídající oddíly B.2/B.3 KH.
+- [ ] Dobropisy, vrubopisy a opravy základu nebo výše daně.
+- [ ] Zálohové faktury a daňové doklady k přijatým či poskytnutým platbám.
+- [ ] Snížená sazba DPH, osvobozená plnění a souběh více sazeb na jednom dokladu.
+- [ ] Tuzemský režim přenesení daňové povinnosti.
+- [ ] Plnění v EU: dodání a pořízení zboží, služby a souhrnné hlášení.
+- [ ] Dovoz, vývoz a další plnění se třetími zeměmi.
+- [ ] Faktury v cizích měnách včetně použití správného kurzu.
+- [ ] Čtvrtletní zdaňovací období.
+- [ ] Právnické osoby a více samostatných profilů plátce.
+- [ ] Opravná a dodatečná přiznání a následná kontrolní hlášení.
+- [ ] Ruční doplnění dokladu, OCR a import faktur bez QR Faktury.
+- [ ] Další vstupní formáty a napojení na fakturační nebo účetní systémy.
+- [ ] Přímé bezpečné načtení, podepsání a odeslání podání do EPO.
+- [ ] Aktualizace XML schémat a číselníků bez nutnosti nové verze aplikace.
+
 ## Vývoj
 
 Je potřeba Go podle `go.mod` a pro validaci golden XML také `xmllint`.

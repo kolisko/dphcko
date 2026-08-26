@@ -13,6 +13,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"dphcko/internal/config"
 	"dphcko/internal/invoice"
+	"dphcko/internal/tax"
 )
 
 type Action int
@@ -140,8 +141,23 @@ func (m dashboard) View() tea.View {
 		if result.Err != nil {
 			fmt.Fprintf(&b, "  %s %s — %v\n", errStyle.Render("✗"), name, result.Err)
 		} else {
-			fmt.Fprintf(&b, "  %s %s — %s, %s Kč\n", okStyle.Render("✓"), name, result.Invoice.Number, result.Invoice.Total.String())
+			fmt.Fprintf(&b, "  %s %s — %s, %s\n", okStyle.Render("✓"), name, result.Invoice.Number, formatCZK(result.Invoice.Total))
 		}
+	}
+	b.WriteString("\nSouhrn DPH z platných faktur\n")
+	summary, invalid, summaryErr := summarizeResults(m.results)
+	if summaryErr != nil {
+		fmt.Fprintf(&b, "  %s %v\n", errStyle.Render("✗"), summaryErr)
+	} else {
+		if invalid > 0 {
+			fmt.Fprintf(&b, "  %s Generování je zablokované. Chybné faktury: %d; součty zahrnují jen platné doklady.\n", errStyle.Render("!"), invalid)
+		}
+		fmt.Fprintf(&b, "  Platné doklady: %d · A.4: %d · A.5: %d\n", len(summary.Invoices), len(summary.A4), len(summary.A5))
+		b.WriteString(muted.Render("  Oddíl KH          Základ 21 %        DPH 21 %") + "\n")
+		fmt.Fprintf(&b, "  %-12s %14s  %14s\n", fmt.Sprintf("A.4 (%d)", len(summary.A4)), formatCZK(summary.Base-summary.A5Base), formatCZK(summary.Tax-summary.A5Tax))
+		fmt.Fprintf(&b, "  %-12s %14s  %14s\n", fmt.Sprintf("A.5 (%d)", len(summary.A5)), formatCZK(summary.A5Base), formatCZK(summary.A5Tax))
+		fmt.Fprintf(&b, "  %s\n", selectedStyle.Render(fmt.Sprintf("%-12s %14s  %14s", "Celkem", formatCZK(summary.Base), formatCZK(summary.Tax))))
+		fmt.Fprintf(&b, "  Celkem včetně DPH: %s\n", formatCZK(summary.Total))
 	}
 	b.WriteString("\n")
 	if m.help {
@@ -153,6 +169,37 @@ func (m dashboard) View() tea.View {
 	view.AltScreen = true
 	view.WindowTitle = "DPHČKO"
 	return view
+}
+
+func summarizeResults(results []invoice.FileResult) (tax.Summary, int, error) {
+	invoices := make([]invoice.Invoice, 0, len(results))
+	invalid := 0
+	for _, result := range results {
+		if result.Err != nil || result.Invoice == nil {
+			invalid++
+			continue
+		}
+		invoices = append(invoices, *result.Invoice)
+	}
+	summary, err := tax.Build(invoices)
+	return summary, invalid, err
+}
+
+func formatCZK(value invoice.Money) string {
+	amount := int64(value)
+	sign := ""
+	var magnitude uint64
+	if amount < 0 {
+		sign = "-"
+		magnitude = uint64(-(amount + 1)) + 1
+	} else {
+		magnitude = uint64(amount)
+	}
+	koruny := strconv.FormatUint(magnitude/100, 10)
+	for i := len(koruny) - 3; i > 0; i -= 3 {
+		koruny = koruny[:i] + " " + koruny[i:]
+	}
+	return fmt.Sprintf("%s%s,%02d Kč", sign, koruny, magnitude%100)
 }
 
 func (m *dashboard) reload() {

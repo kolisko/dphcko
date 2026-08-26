@@ -67,6 +67,9 @@ rendery celých stran uložených PDF bez dalších úprav.
 
 ### Načtené faktury a ovládání
 
+Ještě před generováním aplikace ukáže rozdělení dokladů do A.4 a A.5,
+celkový základ daně, DPH i částku včetně DPH.
+
 ![Přehled načtených faktur v dphcko](docs/images/dphcko-dashboard.png)
 
 ### Výsledek po načtení do MOJE daně

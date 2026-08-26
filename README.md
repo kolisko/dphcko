@@ -54,13 +54,15 @@ odliší a před uložením je znovu zkontroluje.
 
 ### Výsledek po načtení do MOJE daně
 
-Následující dvě obrazovky jsou ilustrační vizualizace podle syntetických XML,
-která byla skutečně načtena do MOJE daně. Nejde o kopie ani součást oficiálního
-portálu; proto jsou přímo v obraze označené jako ilustrační ukázka.
+Následující obrazovky jsou skutečné screenshoty portálu MOJE daně po ručním
+načtení testovacích XML se smyšleným plátcem Janem Novákem. Nejde o skutečné
+daňové podání a žádný z formulářů nebyl odeslán.
 
-![Ilustrační ukázka přiznání k DPH načteného v MOJE daně](docs/images/moje-dane-dph.png)
+![Identifikační údaje syntetického plátce ve formuláři přiznání k DPH na portálu MOJE daně](docs/images/moje-dane-dph.png)
 
-![Ilustrační ukázka kontrolního hlášení načteného v MOJE daně](docs/images/moje-dane-kh.png)
+![Řádek 1 přiznání k DPH načtený ze syntetického XML na portálu MOJE daně](docs/images/moje-dane-dph-radky.png)
+
+![Oddíl A.4 kontrolního hlášení načtený ze syntetického XML na portálu MOJE daně](docs/images/moje-dane-kh.png)
 
 ## Použití
 

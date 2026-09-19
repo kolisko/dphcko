@@ -9,6 +9,7 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"dphcko/internal/config"
 	"dphcko/internal/invoice"
 )
@@ -33,6 +34,47 @@ func TestDiscoverPeriodsShowsNewestAtBottomAndSelectsIt(t *testing.T) {
 	}
 	if selected := newestPeriodIndex(periods); selected != len(periods)-1 {
 		t.Fatalf("výchozí výběr = %d, chci poslední index %d", selected, len(periods)-1)
+	}
+}
+
+func TestPeriodWithGeneratedEPOOutputShowsGreenCheckAndOrangeSelection(t *testing.T) {
+	root := t.TempDir()
+	outputDir := filepath.Join(root, "2026", "08", "vystup")
+	if err := os.MkdirAll(outputDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(outputDir, "DPHDP3_2026-08.xml"), []byte("<DPHDP3/>"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	periods := DiscoverPeriods(root)
+	if len(periods) != 1 || !periods[0].HasEPOOutput {
+		t.Fatalf("vygenerovaný výstup nebyl rozpoznán: %#v", periods)
+	}
+	m := dashboard{periods: periods}
+	view := m.View().Content
+	if !strings.Contains(view, lipgloss.NewStyle().Foreground(lipgloss.Color("#35BB78")).Render("✓")) {
+		t.Fatalf("období nemá zelenou fajfku:\n%s", view)
+	}
+	orangeArrow := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#F5C451")).Render("<")
+	if !strings.Contains(view, orangeArrow) {
+		t.Fatalf("výběrový znak není oranžový:\n%s", view)
+	}
+	if strings.Contains(view, "›") {
+		t.Fatalf("starý výběrový znak zůstal vlevo:\n%s", view)
+	}
+}
+
+func TestEmptyEPOOutputDoesNotShowCompletion(t *testing.T) {
+	dir := t.TempDir()
+	outputDir := filepath.Join(dir, "vystup")
+	if err := os.MkdirAll(outputDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(outputDir, "DPHDP3_2026-08.xml"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if periodHasEPOOutput(dir, 2026, 8) {
+		t.Fatal("prázdný XML soubor se nesmí tvářit jako hotový výstup")
 	}
 }
 
@@ -62,12 +104,93 @@ func TestDashboardGStartsGeneration(t *testing.T) {
 	}
 }
 
+func TestDashboardIShowsModalWithoutLeavingDashboard(t *testing.T) {
+	m := dashboard{root: t.TempDir(), cfg: config.Config{Profile: config.Profile{VATID: "CZ9001010007"}}}
+
+	next, cmd := m.Update(tea.KeyPressMsg(tea.Key{Code: 'i', Text: "i"}))
+	updated := next.(dashboard)
+	if updated.modal == nil || updated.modal.kind != modalIDoklad || cmd == nil {
+		t.Fatalf("i musí otevřít modální dialog: modal=%#v, cmd=%v", updated.modal, cmd)
+	}
+	view := updated.View().Content
+	for _, expected := range []string{"Zatím není evidován žádný stažený doklad", "samostatné okno Chromu", "DPHČKO"} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("modální obrazovka neobsahuje %q:\n%s", expected, view)
+		}
+	}
+}
+
+func TestDashboardNShowsNewPeriodModal(t *testing.T) {
+	m := dashboard{root: t.TempDir()}
+
+	next, cmd := m.Update(tea.KeyPressMsg(tea.Key{Code: 'n', Text: "n"}))
+	updated := next.(dashboard)
+	if updated.modal == nil || updated.modal.kind != modalNewPeriod || cmd == nil {
+		t.Fatalf("n musí otevřít modální formulář: modal=%#v, cmd=%v", updated.modal, cmd)
+	}
+}
+
+func TestDashboardEscapeClosesModal(t *testing.T) {
+	m := dashboard{root: t.TempDir()}
+	next, _ := m.Update(tea.KeyPressMsg(tea.Key{Code: 'n', Text: "n"}))
+	withModal := next.(dashboard)
+
+	next, cmd := withModal.Update(tea.KeyPressMsg(tea.Key{Code: tea.KeyEscape}))
+	closed := next.(dashboard)
+	if closed.modal != nil || cmd != nil {
+		t.Fatalf("Esc musí zavřít dialog bez ukončení dashboardu: modal=%#v, cmd=%v", closed.modal, cmd)
+	}
+}
+
+func TestDashboardGenerationShowsOverwriteModal(t *testing.T) {
+	periodDir := t.TempDir()
+	outputDir := filepath.Join(periodDir, "vystup")
+	if err := os.MkdirAll(outputDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(outputDir, "DPHDP3_2026-08.xml"), []byte("existing"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	m := dashboard{periods: []Period{{Year: 2026, Month: time.August, Dir: periodDir}}}
+
+	next, cmd := m.Update(tea.KeyPressMsg(tea.Key{Code: 'g', Text: "g"}))
+	updated := next.(dashboard)
+	if updated.modal == nil || updated.modal.kind != modalOverwrite || cmd == nil {
+		t.Fatalf("existující výstup musí otevřít dialog přepsání: modal=%#v, cmd=%v", updated.modal, cmd)
+	}
+}
+
+func TestDashboardGenerationShowsConsumerModal(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "nadlimitni.pdf")
+	m := dashboard{
+		periods: []Period{{Year: 2026, Month: time.August, Dir: t.TempDir()}},
+		results: []invoice.FileResult{{
+			Path: path,
+			Invoice: &invoice.Invoice{
+				Number: "20260042", Total: invoice.A4Threshold + 1,
+			},
+			Err: errors.New("chybí DIČ odběratele"),
+		}},
+	}
+
+	next, cmd := m.Update(tea.KeyPressMsg(tea.Key{Code: 'g', Text: "g"}))
+	updated := next.(dashboard)
+	if updated.modal == nil || updated.modal.kind != modalConsumer || cmd == nil {
+		t.Fatalf("nadlimitní doklad musí otevřít dialog A.5: modal=%#v, cmd=%v", updated.modal, cmd)
+	}
+	updated.modal.confirmed = true
+	next, cmd = updated.completeModal()
+	confirmed := next.(dashboard)
+	if !confirmed.generate.ConsumerDocuments[path] || confirmed.action != ActionGenerate || cmd == nil {
+		t.Fatalf("potvrzení A.5 se nepředalo generátoru: options=%#v, action=%v, cmd=%v", confirmed.generate, confirmed.action, cmd)
+	}
+}
+
 func TestDashboardUppercaseShortcutsWork(t *testing.T) {
 	tests := []struct {
 		key  rune
 		want Action
 	}{
-		{key: 'N', want: ActionNewPeriod},
 		{key: 'G', want: ActionGenerate},
 		{key: 'O', want: ActionOpenEPO},
 	}
@@ -86,8 +209,9 @@ func TestDashboardMenuStartsWithNewPeriodThenGenerateAndEPO(t *testing.T) {
 	newPosition := strings.Index(menu, "nové období")
 	generatePosition := strings.Index(menu, "generovat")
 	epoPosition := strings.Index(menu, "otevřít EPO")
+	idokladPosition := strings.Index(menu, "iDoklad")
 	reloadPosition := strings.Index(menu, "načíst")
-	if newPosition < 0 || generatePosition < newPosition || epoPosition < generatePosition || reloadPosition < epoPosition {
+	if newPosition < 0 || generatePosition < newPosition || epoPosition < generatePosition || idokladPosition < epoPosition || reloadPosition < idokladPosition {
 		t.Fatalf("neočekávané pořadí menu: %q", menu)
 	}
 	if !strings.Contains(menu, "\x1b[") {

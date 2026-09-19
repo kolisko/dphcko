@@ -12,6 +12,8 @@ jediná binárka bez CGO na macOS, Linuxu a Windows.
 
 - [x] Jediná lokální binárka bez CGO pro macOS, Linux a Windows.
 - [x] Interaktivní terminálové rozhraní ovládané klávesnicí.
+- [x] Modální formuláře a potvrzení zobrazené přímo nad hlavním přehledem;
+      `Esc` je zavře bez opuštění dashboardu.
 - [x] Průvodce prvním spuštěním s předvyplněním veřejných údajů z ARES a
       možností ručního zadání při nedostupnosti služby.
 - [x] Lokální profil plátce v čitelném `dphcko.toml` a celoobrazovkový editor,
@@ -29,6 +31,8 @@ jediná binárka bez CGO na macOS, Linuxu a Windows.
 - [x] Atomický zápis výstupů s omezenými oprávněními, ochranou před nechtěným
       přepsáním a bez odesílání dat mimo počítač uživatele.
 - [x] Otevření stránky MOJE daně pro ruční načtení vygenerovaných XML.
+- [x] Automatická synchronizace nových vydaných PDF z iDokladu přes samostatnou
+      relaci Chromu, bez placeného API a bez ukládání hesla do konfigurace.
 - [x] Automatické testy, validace proti XSD, CodeQL a multiplatformní buildy
       a release archivy na GitHubu.
 
@@ -92,7 +96,17 @@ daňové podání a žádný z formulářů nebyl odeslán.
    Výsledný profil uloží jako viditelný `dphcko.toml` v této složce.
 4. Klávesou `n` vytvořte období (předvolený je poslední dokončený měsíc),
    například `2026/08/`, a vložte PDF faktury přímo do této složky.
-5. `r` faktury znovu načte a pouze `g` spustí závěrečnou kontrolu a generování.
+5. Volitelně klávesou `i` spusťte synchronizaci iDokladu. Při prvním použití se
+   ve zvláštní relaci Chromu přihlaste; další kroky už aplikace provede sama.
+   Zapamatuje si číslo posledního úspěšně převzatého dokladu, v seznamu
+   vydaných faktur najde všechny novější, jednotlivě stáhne jejich PDF a podle
+   DUZP je uloží do správných složek `RRRR/MM`. Při úplně první synchronizaci
+   vezme výchozí číslo z lokálních faktur; pokud žádné nejsou, stáhne celou
+   dostupnou historii. Existující PDF nikdy nepřepíše a stav posune až po
+   úspěšném stažení a ověření všech nových dokladů.
+   Přihlášení zůstává v `.dphcko/idoklad-chrome` a synchronizační stav v
+   `.dphcko/idoklad-state.json`; ani jedno se neukládá do `dphcko.toml`.
+6. `r` faktury znovu načte a pouze `g` spustí závěrečnou kontrolu a generování.
    Enter nic negeneruje. Pokud už cílové soubory existují, aplikace před jejich
    přepsáním zobrazí výslovné potvrzení. Potom otevře v nastaveném prohlížeči
    obecnou stránku EPO pro ruční načtení XML. Klávesa `o` tuto stránku kdykoliv
@@ -125,6 +139,12 @@ browser = "chrome"
 Podporované hodnoty jsou `default`, `chrome`, `chromium`, `edge`, `firefox`,
 `brave`, `safari`, `opera` a `vivaldi`. Pokud vybraný prohlížeč není dostupný,
 aplikace zobrazí chybu a bez vědomí uživatele nepřejde k jinému prohlížeči.
+
+Import z iDokladu vyžaduje prohlížeč založený na Chromiu: `chrome`, `chromium`,
+`edge` nebo `brave`. Při hodnotě `default` se pro import zkusí Google Chrome;
+nastavení výchozího systémového prohlížeče se nadále používá pro otevření EPO.
+Synchronizace ovládá veřejné webové rozhraní iDokladu, nikoli jeho placené API;
+výrazná změna stránky iDokladu proto může vyžadovat aktualizaci `dphcko`.
 
 ## Požadavky na faktury
 

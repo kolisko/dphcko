@@ -2,6 +2,8 @@
 /build/
 /dphcko
 /dphcko.toml
+/.dphcko/
+**/.idoklad-stazene/
 /[0-9][0-9][0-9][0-9]/
 *.exe
 *.test

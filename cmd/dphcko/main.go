@@ -1,14 +1,12 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"charm.land/huh/v2"
 	"dphcko/internal/config"
 	"dphcko/internal/epo"
 	"dphcko/internal/ui"
@@ -32,7 +30,7 @@ func main() {
 
 	notice := ""
 	for {
-		action, period, err := ui.RunDashboard(root, cfg, notice)
+		action, period, generateOptions, err := ui.RunDashboard(root, cfg, notice)
 		if err != nil {
 			fatal(err)
 		}
@@ -40,16 +38,6 @@ func main() {
 		switch action {
 		case ui.ActionQuit:
 			return
-		case ui.ActionNewPeriod:
-			created, err := ui.CreatePeriod(root, time.Now())
-			if err != nil {
-				if errors.Is(err, huh.ErrUserAborted) {
-					continue
-				}
-				notice = "Chyba: " + err.Error()
-				continue
-			}
-			notice = "Založena složka " + created.String() + ". Vložte do ní PDF faktury."
 		case ui.ActionConfig:
 			updated, saved, err := ui.RunProfileEditor(root, cfg)
 			if err != nil {
@@ -67,15 +55,23 @@ func main() {
 			} else {
 				notice = "V prohlížeči byla otevřena stránka EPO pro ruční načtení XML."
 			}
+		case ui.ActionImportIDoklad:
+			result, err := ui.ImportFromIDoklad(root, cfg)
+			if err != nil {
+				notice = "Synchronizace iDokladu se nepodařila: " + err.Error()
+				continue
+			}
+			if len(result.RemoteDocuments) == 0 {
+				notice = "iDoklad je synchronizovaný; žádné novější faktury nebyly nalezeny."
+				continue
+			}
+			notice = fmt.Sprintf("iDoklad: staženo %d nových PDF, %d už bylo místně. Poslední doklad je %s.", len(result.Imported), len(result.Skipped), result.NewestDocumentNumber)
 		case ui.ActionGenerate:
 			if period == nil {
 				continue
 			}
-			paths, err := ui.Generate(root, cfg, *period, time.Now())
+			paths, err := ui.Generate(root, cfg, *period, time.Now(), generateOptions)
 			if err != nil {
-				if errors.Is(err, huh.ErrUserAborted) {
-					continue
-				}
 				notice = "Generování zastaveno: " + err.Error()
 				continue
 			}

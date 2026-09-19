@@ -1,6 +1,7 @@
 package epo
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,7 +18,35 @@ type OutputPaths struct {
 	Summary string
 }
 
+var ErrOutputExists = errors.New("výstupní soubory už existují")
+
 func WritePeriod(periodDir string, profile config.Profile, year, month int, summary tax.Summary, now time.Time) (OutputPaths, error) {
+	return writePeriod(periodDir, profile, year, month, summary, now, false)
+}
+
+func ReplacePeriod(periodDir string, profile config.Profile, year, month int, summary tax.Summary, now time.Time) (OutputPaths, error) {
+	return writePeriod(periodDir, profile, year, month, summary, now, true)
+}
+
+func ExistingPeriodOutputs(periodDir string, year, month int) ([]string, error) {
+	paths := periodOutputPaths(periodDir, year, month)
+	candidates := []string{paths.DPH, paths.KH, paths.Summary}
+	existing := make([]string, 0, len(candidates))
+	for _, path := range candidates {
+		_, err := os.Stat(path)
+		switch {
+		case err == nil:
+			existing = append(existing, path)
+		case os.IsNotExist(err):
+			continue
+		default:
+			return nil, fmt.Errorf("kontrola existujícího výstupu %s: %w", filepath.Base(path), err)
+		}
+	}
+	return existing, nil
+}
+
+func writePeriod(periodDir string, profile config.Profile, year, month int, summary tax.Summary, now time.Time, overwrite bool) (OutputPaths, error) {
 	dphData, err := DPH(profile, year, month, summary, now)
 	if err != nil {
 		return OutputPaths{}, err
@@ -33,15 +62,25 @@ func WritePeriod(periodDir string, profile config.Profile, year, month int, summ
 	if err := os.MkdirAll(outDir, 0o750); err != nil {
 		return OutputPaths{}, err
 	}
-	suffix := fmt.Sprintf("%04d-%02d", year, month)
-	paths := OutputPaths{
-		DPH:     filepath.Join(outDir, "DPHDP3_"+suffix+".xml"),
-		Summary: filepath.Join(outDir, "prehled_"+suffix+".txt"),
+	allPaths := periodOutputPaths(periodDir, year, month)
+	if !overwrite {
+		existing, err := ExistingPeriodOutputs(periodDir, year, month)
+		if err != nil {
+			return OutputPaths{}, err
+		}
+		if len(existing) > 0 {
+			names := make([]string, len(existing))
+			for i, path := range existing {
+				names[i] = filepath.Base(path)
+			}
+			return OutputPaths{}, fmt.Errorf("%w: %s", ErrOutputExists, strings.Join(names, ", "))
+		}
 	}
-	if len(khData) > 0 {
-		paths.KH = filepath.Join(outDir, "DPHKH1_"+suffix+".xml")
+	paths := allPaths
+	if len(khData) == 0 {
+		paths.KH = ""
 	}
-	staleKH := filepath.Join(outDir, "DPHKH1_"+suffix+".xml")
+	staleKH := allPaths.KH
 	report := textSummary(profile, year, month, summary, now)
 	files := []struct {
 		path string
@@ -66,6 +105,16 @@ func WritePeriod(periodDir string, profile config.Profile, year, month int, summ
 		}
 	}
 	return paths, nil
+}
+
+func periodOutputPaths(periodDir string, year, month int) OutputPaths {
+	outDir := filepath.Join(periodDir, "vystup")
+	suffix := fmt.Sprintf("%04d-%02d", year, month)
+	return OutputPaths{
+		DPH:     filepath.Join(outDir, "DPHDP3_"+suffix+".xml"),
+		KH:      filepath.Join(outDir, "DPHKH1_"+suffix+".xml"),
+		Summary: filepath.Join(outDir, "prehled_"+suffix+".txt"),
+	}
 }
 
 func atomicWrite(path string, data []byte, mode os.FileMode) error {

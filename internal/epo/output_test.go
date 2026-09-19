@@ -1,6 +1,7 @@
 package epo
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,7 +10,7 @@ import (
 	"dphcko/internal/tax"
 )
 
-func TestWritePeriodReplacesFilesAndRemovesStaleKH(t *testing.T) {
+func TestWritePeriodRefusesToOverwriteExistingFiles(t *testing.T) {
 	dir := t.TempDir()
 	now := time.Date(2026, 9, 20, 12, 0, 0, 0, time.UTC)
 	paths, err := WritePeriod(dir, testProfile(), 2026, 8, testSummary(t), now)
@@ -21,7 +22,27 @@ func TestWritePeriodReplacesFilesAndRemovesStaleKH(t *testing.T) {
 			t.Fatalf("výstup %s: %v", path, err)
 		}
 	}
-	zero, err := WritePeriod(dir, testProfile(), 2026, 8, tax.Summary{}, now)
+	_, err = WritePeriod(dir, testProfile(), 2026, 8, tax.Summary{}, now)
+	if !errors.Is(err, ErrOutputExists) {
+		t.Fatalf("opakovaný zápis má skončit ErrOutputExists, dostal jsem %v", err)
+	}
+}
+
+func TestReplacePeriodReplacesFilesAndRemovesStaleKH(t *testing.T) {
+	dir := t.TempDir()
+	now := time.Date(2026, 9, 20, 12, 0, 0, 0, time.UTC)
+	if _, err := WritePeriod(dir, testProfile(), 2026, 8, testSummary(t), now); err != nil {
+		t.Fatal(err)
+	}
+	existing, err := ExistingPeriodOutputs(dir, 2026, 8)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(existing) != 3 {
+		t.Fatalf("nalezeno %d existujících výstupů, chci 3: %v", len(existing), existing)
+	}
+
+	zero, err := ReplacePeriod(dir, testProfile(), 2026, 8, tax.Summary{}, now)
 	if err != nil {
 		t.Fatal(err)
 	}

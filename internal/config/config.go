@@ -18,7 +18,12 @@ const (
 
 type Config struct {
 	Format  int     `toml:"format"`
+	App     App     `toml:"app"`
 	Profile Profile `toml:"profile"`
+}
+
+type App struct {
+	Browser string `toml:"browser,omitempty"`
 }
 
 type Profile struct {
@@ -40,7 +45,7 @@ type Profile struct {
 }
 
 func Default() Config {
-	return Config{Format: CurrentFormat, Profile: Profile{Country: "CZ"}}
+	return Config{Format: CurrentFormat, App: App{Browser: "default"}, Profile: Profile{Country: "CZ"}}
 }
 
 func Path(root string) string { return filepath.Join(root, FileName) }
@@ -99,6 +104,9 @@ func Save(root string, cfg Config) error {
 }
 
 func (c Config) Validate() error {
+	if !ValidBrowser(c.App.Browser) {
+		return fmt.Errorf("neznámý prohlížeč %q; použijte default, chrome, chromium, edge, firefox, brave, safari, opera nebo vivaldi", c.App.Browser)
+	}
 	p := c.Profile
 	checks := []struct {
 		name  string
@@ -154,4 +162,13 @@ func (c Config) Validate() error {
 		return errors.New("v1 podporuje pouze stát CZ")
 	}
 	return nil
+}
+
+func ValidBrowser(browser string) bool {
+	switch browser {
+	case "", "default", "chrome", "chromium", "edge", "firefox", "brave", "safari", "opera", "vivaldi":
+		return true
+	default:
+		return false
+	}
 }

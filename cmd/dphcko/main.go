@@ -62,7 +62,7 @@ func main() {
 			cfg = updated
 			notice = "Profil byl uložen do " + config.FileName + "."
 		case ui.ActionOpenEPO:
-			if err := epo.OpenUploadPage(); err != nil {
+			if err := epo.OpenUploadPage(cfg.App.Browser); err != nil {
 				notice = "Stránku EPO se nepodařilo otevřít: " + err.Error() + "."
 			} else {
 				notice = "V prohlížeči byla otevřena stránka EPO pro ruční načtení XML."
@@ -88,7 +88,7 @@ func main() {
 			if paths.KH == "" {
 				notice += " Kontrolní hlášení nevzniklo, protože v podporovaném rozsahu nejsou žádné doklady."
 			}
-			err = epo.OpenUploadPage()
+			err = epo.OpenUploadPage(cfg.App.Browser)
 			if err != nil {
 				notice += " XML jsou uložená, ale stránku EPO se nepodařilo otevřít: " + err.Error() + "."
 			} else {

@@ -57,6 +57,21 @@ func TestValidateRejectsSchemaInvalidProfile(t *testing.T) {
 	}
 }
 
+func TestBrowserValidation(t *testing.T) {
+	for _, browser := range []string{"", "default", "chrome", "chromium", "edge", "firefox", "brave", "safari", "opera", "vivaldi"} {
+		cfg := validConfig()
+		cfg.App.Browser = browser
+		if err := cfg.Validate(); err != nil {
+			t.Errorf("browser=%q má být platný: %v", browser, err)
+		}
+	}
+	cfg := validConfig()
+	cfg.App.Browser = "Google Chrome"
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("víceslovná hodnota prohlížeče měla být odmítnuta")
+	}
+}
+
 func TestLookupARES(t *testing.T) {
 	client := &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 		if req.URL.String() != "https://ares.test/12345678" {

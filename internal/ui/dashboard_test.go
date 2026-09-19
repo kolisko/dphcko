@@ -2,13 +2,98 @@ package ui
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	tea "charm.land/bubbletea/v2"
 	"dphcko/internal/config"
 	"dphcko/internal/invoice"
 )
+
+func TestDiscoverPeriodsShowsNewestAtBottomAndSelectsIt(t *testing.T) {
+	root := t.TempDir()
+	for _, dir := range []string{"2027/01", "2026/12", "2026/07"} {
+		if err := os.MkdirAll(filepath.Join(root, dir), 0o750); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	periods := DiscoverPeriods(root)
+	want := []string{"2026/07", "2026/12", "2027/01"}
+	if len(periods) != len(want) {
+		t.Fatalf("počet období = %d, chci %d", len(periods), len(want))
+	}
+	for i, expected := range want {
+		if got := periods[i].String(); got != expected {
+			t.Fatalf("období[%d] = %s, chci %s", i, got, expected)
+		}
+	}
+	if selected := newestPeriodIndex(periods); selected != len(periods)-1 {
+		t.Fatalf("výchozí výběr = %d, chci poslední index %d", selected, len(periods)-1)
+	}
+}
+
+func TestDashboardEnterDoesNotGenerate(t *testing.T) {
+	m := dashboard{periods: []Period{{Year: 2026, Month: time.August}}}
+
+	next, cmd := m.Update(tea.KeyPressMsg(tea.Key{Code: tea.KeyEnter}))
+	updated := next.(dashboard)
+	if updated.action == ActionGenerate {
+		t.Fatal("Enter nesmí spustit generování")
+	}
+	if cmd != nil {
+		t.Fatal("Enter nesmí ukončit dashboard")
+	}
+	if updated.notice != "" {
+		t.Fatalf("Enter nemá měnit stav dashboardu: %q", updated.notice)
+	}
+}
+
+func TestDashboardGStartsGeneration(t *testing.T) {
+	m := dashboard{periods: []Period{{Year: 2026, Month: time.August}}}
+
+	next, cmd := m.Update(tea.KeyPressMsg(tea.Key{Code: 'g', Text: "g"}))
+	updated := next.(dashboard)
+	if updated.action != ActionGenerate || cmd == nil {
+		t.Fatalf("g musí spustit generování: action=%v, cmd=%v", updated.action, cmd)
+	}
+}
+
+func TestDashboardUppercaseShortcutsWork(t *testing.T) {
+	tests := []struct {
+		key  rune
+		want Action
+	}{
+		{key: 'N', want: ActionNewPeriod},
+		{key: 'G', want: ActionGenerate},
+		{key: 'O', want: ActionOpenEPO},
+	}
+	for _, test := range tests {
+		m := dashboard{periods: []Period{{Year: 2026, Month: time.August}}}
+		next, cmd := m.Update(tea.KeyPressMsg(tea.Key{Code: test.key, Text: string(test.key)}))
+		updated := next.(dashboard)
+		if updated.action != test.want || cmd == nil {
+			t.Errorf("klávesa %c: action=%v, cmd=%v; chci action=%v a ukončení dashboardu", test.key, updated.action, cmd, test.want)
+		}
+	}
+}
+
+func TestDashboardMenuStartsWithNewPeriodThenGenerateAndEPO(t *testing.T) {
+	menu := renderDashboardMenu(false)
+	newPosition := strings.Index(menu, "nové období")
+	generatePosition := strings.Index(menu, "generovat")
+	epoPosition := strings.Index(menu, "otevřít EPO")
+	reloadPosition := strings.Index(menu, "načíst")
+	if newPosition < 0 || generatePosition < newPosition || epoPosition < generatePosition || reloadPosition < epoPosition {
+		t.Fatalf("neočekávané pořadí menu: %q", menu)
+	}
+	if !strings.Contains(menu, "\x1b[") {
+		t.Fatalf("menu nemá barevný styl: %q", menu)
+	}
+}
 
 func TestDashboardSummaryMatchesA4AndA5(t *testing.T) {
 	date := time.Date(2026, 8, 15, 0, 0, 0, 0, time.UTC)
@@ -51,6 +136,9 @@ func TestDashboardViewShowsTaxSummaryBeforeGeneration(t *testing.T) {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("obrazovka neobsahuje %q:\n%s", expected, view)
 		}
+	}
+	if strings.Contains(view, "Enter/g generovat") {
+		t.Fatalf("nápověda stále nabízí generování Enterem:\n%s", view)
 	}
 }
 

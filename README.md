@@ -26,8 +26,8 @@ jediná binárka bez CGO na macOS, Linuxu a Windows.
       textového přehledu za období.
 - [x] Kontrolní součty, korunové zaokrouhlení přiznání a zachování haléřů v KH.
 - [x] Nulové přiznání za období bez dokladů; prázdné KH se nevytváří.
-- [x] Atomický zápis výstupů s omezenými oprávněními a bez odesílání dat mimo
-      počítač uživatele.
+- [x] Atomický zápis výstupů s omezenými oprávněními, ochranou před nechtěným
+      přepsáním a bez odesílání dat mimo počítač uživatele.
 - [x] Otevření stránky MOJE daně pro ruční načtení vygenerovaných XML.
 - [x] Automatické testy, validace proti XSD, CodeQL a multiplatformní buildy
       a release archivy na GitHubu.
@@ -92,12 +92,13 @@ daňové podání a žádný z formulářů nebyl odeslán.
    Výsledný profil uloží jako viditelný `dphcko.toml` v této složce.
 4. Klávesou `n` vytvořte období (předvolený je poslední dokončený měsíc),
    například `2026/08/`, a vložte PDF faktury přímo do této složky.
-5. `r` faktury znovu načte a `g` nebo Enter spustí závěrečnou kontrolu a
-   generování. Potom otevře ve výchozím prohlížeči obecnou stránku EPO pro
-   ruční načtení XML. Klávesa `o` tuto stránku kdykoliv znovu otevře bez
-   opakovaného generování. Klávesa `c` otevře celý profil; šipkami nebo Tabem
-   se přechází mezi poli, Enter či `Ctrl+S` změny uloží a Esc editor zavře bez
-   uložení.
+5. `r` faktury znovu načte a pouze `g` spustí závěrečnou kontrolu a generování.
+   Enter nic negeneruje. Pokud už cílové soubory existují, aplikace před jejich
+   přepsáním zobrazí výslovné potvrzení. Potom otevře v nastaveném prohlížeči
+   obecnou stránku EPO pro ruční načtení XML. Klávesa `o` tuto stránku kdykoliv
+   znovu otevře bez opakovaného generování. Klávesa `c` otevře celý profil;
+   šipkami nebo Tabem se přechází mezi poli, Enter či `Ctrl+S` změny uloží a
+   Esc editor zavře bez uložení.
 
 Výstupy vzniknou v `RRRR/MM/vystup/`:
 
@@ -109,6 +110,21 @@ Aplikace XML nikam automaticky nenahrává, neodesílá ani nepodepisuje. Otevř
 pouze stránku [Načtení XML souboru v EPO](https://adisspr.mfcr.cz/dpr/adis/idpr_epo/epo2/uvod/nacteni_souboru.faces),
 kde uživatel vybere soubor ze složky `vystup/`. Ve formuláři spusťte kontrolu
 a před podáním porovnejte čitelný přehled s evidencí.
+
+### Prohlížeč pro EPO
+
+Pokud `browser` v konfiguraci chybí nebo má hodnotu `default`, použije se
+systémový výchozí prohlížeč. Konkrétní prohlížeč lze nastavit v
+`dphcko.toml` jednoslovnou hodnotou malými písmeny:
+
+```toml
+[app]
+browser = "chrome"
+```
+
+Podporované hodnoty jsou `default`, `chrome`, `chromium`, `edge`, `firefox`,
+`brave`, `safari`, `opera` a `vivaldi`. Pokud vybraný prohlížeč není dostupný,
+aplikace zobrazí chybu a bez vědomí uživatele nepřejde k jinému prohlížeči.
 
 ## Požadavky na faktury
 

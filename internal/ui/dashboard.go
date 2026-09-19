@@ -47,7 +47,8 @@ type dashboard struct {
 }
 
 func RunDashboard(root string, cfg config.Config, notice string) (Action, *Period, error) {
-	m := dashboard{root: root, cfg: cfg, periods: DiscoverPeriods(root), notice: notice}
+	periods := DiscoverPeriods(root)
+	m := dashboard{root: root, cfg: cfg, periods: periods, selected: newestPeriodIndex(periods), notice: notice}
 	m.reload()
 	program := tea.NewProgram(m)
 	final, err := program.Run()
@@ -62,6 +63,13 @@ func RunDashboard(root string, cfg config.Config, notice string) (Action, *Perio
 	return result.action, &period, nil
 }
 
+func newestPeriodIndex(periods []Period) int {
+	if len(periods) == 0 {
+		return 0
+	}
+	return len(periods) - 1
+}
+
 func (m dashboard) Init() tea.Cmd { return nil }
 
 func (m dashboard) Update(message tea.Msg) (tea.Model, tea.Cmd) {
@@ -70,34 +78,34 @@ func (m dashboard) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 	case tea.KeyPressMsg:
 		switch msg.String() {
-		case "q", "ctrl+c":
+		case "q", "Q", "ctrl+c":
 			m.action = ActionQuit
 			return m, tea.Quit
-		case "n":
+		case "n", "N":
 			m.action = ActionNewPeriod
 			return m, tea.Quit
-		case "c":
+		case "c", "C":
 			m.action = ActionConfig
 			return m, tea.Quit
-		case "o":
+		case "o", "O":
 			m.action = ActionOpenEPO
 			return m, tea.Quit
-		case "g", "enter":
+		case "g", "G":
 			if len(m.periods) > 0 {
 				m.action = ActionGenerate
 				return m, tea.Quit
 			}
-		case "r":
+		case "r", "R":
 			m.reload()
 			m.notice = "Složka období byla znovu načtena."
 		case "?":
 			m.help = !m.help
-		case "up", "k":
+		case "up", "k", "K":
 			if m.selected > 0 {
 				m.selected--
 				m.reload()
 			}
-		case "down", "j":
+		case "down", "j", "J":
 			if m.selected+1 < len(m.periods) {
 				m.selected++
 				m.reload()
@@ -160,15 +168,38 @@ func (m dashboard) View() tea.View {
 		fmt.Fprintf(&b, "  Celkem včetně DPH: %s\n", formatCZK(summary.Total))
 	}
 	b.WriteString("\n")
-	if m.help {
-		b.WriteString("↑/↓ nebo j/k období · Enter/g generovat · o otevřít EPO · n nové období · r načíst · c profil · q konec · ? skrýt nápovědu\n")
-	} else {
-		b.WriteString(muted.Render("Enter/g generovat · o otevřít EPO · n nové · r načíst · c profil · ? nápověda · q konec") + "\n")
-	}
+	b.WriteString(renderDashboardMenu(m.help) + "\n")
 	view := tea.NewView(b.String())
 	view.AltScreen = true
 	view.WindowTitle = "DPHČKO"
 	return view
+}
+
+func renderDashboardMenu(help bool) string {
+	keyStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#102018")).Background(lipgloss.Color("#5AF78E")).Padding(0, 1)
+	label := lipgloss.NewStyle().Foreground(lipgloss.Color("#B8B8B8"))
+	separator := "   "
+
+	item := func(key, description string, keyStyle lipgloss.Style) string {
+		return keyStyle.Render(key) + " " + label.Render(description)
+	}
+	helpLabel := "nápověda"
+	if help {
+		helpLabel = "skrýt nápovědu"
+	}
+	items := []string{
+		item("N", "nové období", keyStyle),
+		item("G", "generovat", keyStyle),
+		item("O", "otevřít EPO", keyStyle),
+		item("R", "načíst", keyStyle),
+		item("C", "profil", keyStyle),
+		item("?", helpLabel, keyStyle),
+		item("Q", "konec", keyStyle),
+	}
+	if help {
+		items = append(items, label.Render("↑/↓ nebo J/K vybrat období"))
+	}
+	return strings.Join(items, separator)
 }
 
 func summarizeResults(results []invoice.FileResult) (tax.Summary, int, error) {
@@ -235,9 +266,9 @@ func DiscoverPeriods(root string) []Period {
 	}
 	sort.Slice(periods, func(i, j int) bool {
 		if periods[i].Year != periods[j].Year {
-			return periods[i].Year > periods[j].Year
+			return periods[i].Year < periods[j].Year
 		}
-		return periods[i].Month > periods[j].Month
+		return periods[i].Month < periods[j].Month
 	})
 	return periods
 }

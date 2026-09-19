@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"charm.land/huh/v2"
@@ -73,5 +74,29 @@ func Generate(root string, cfg config.Config, period Period, now time.Time) (epo
 	if err != nil {
 		return epo.OutputPaths{}, err
 	}
-	return epo.WritePeriod(period.Dir, cfg.Profile, period.Year, int(period.Month), summary, now)
+	existing, err := epo.ExistingPeriodOutputs(period.Dir, period.Year, int(period.Month))
+	if err != nil {
+		return epo.OutputPaths{}, err
+	}
+	if len(existing) == 0 {
+		return epo.WritePeriod(period.Dir, cfg.Profile, period.Year, int(period.Month), summary, now)
+	}
+	names := make([]string, len(existing))
+	for i, path := range existing {
+		names[i] = filepath.Base(path)
+	}
+	overwrite := false
+	err = huh.NewConfirm().
+		Title("Výstupy pro " + period.String() + " už existují: " + strings.Join(names, ", ") + ". Přepsat?").
+		Affirmative("Ano, přepsat").
+		Negative("Ne, ponechat").
+		Value(&overwrite).
+		Run()
+	if err != nil {
+		return epo.OutputPaths{}, err
+	}
+	if !overwrite {
+		return epo.OutputPaths{}, errors.New("existující výstupy zůstaly beze změny")
+	}
+	return epo.ReplacePeriod(period.Dir, cfg.Profile, period.Year, int(period.Month), summary, now)
 }

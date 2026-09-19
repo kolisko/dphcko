@@ -160,6 +160,29 @@ func TestDashboardGenerationShowsOverwriteModal(t *testing.T) {
 	}
 }
 
+func TestDashboardCurrentMonthGenerationShowsWarningModal(t *testing.T) {
+	now := time.Date(2026, time.September, 19, 12, 0, 0, 0, time.Local)
+	m := dashboard{periods: []Period{{Year: 2026, Month: time.September, Dir: t.TempDir()}}}
+
+	next, cmd := m.prepareGenerationAt(now)
+	updated := next.(dashboard)
+	if updated.modal == nil || updated.modal.kind != modalCurrentPeriod || cmd == nil {
+		t.Fatalf("aktuální měsíc musí otevřít varovný dialog: modal=%#v, cmd=%v", updated.modal, cmd)
+	}
+	view := updated.View().Content
+	for _, expected := range []string{"ještě není ukončené", "Faktury přidané později", "Enter potvrdit"} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("dialog neobsahuje %q:\n%s", expected, view)
+		}
+	}
+	updated.modal.confirmed = true
+	next, cmd = updated.completeModal()
+	confirmed := next.(dashboard)
+	if confirmed.action != ActionGenerate || cmd == nil {
+		t.Fatalf("potvrzení aktuálního měsíce musí pokračovat: action=%v, cmd=%v", confirmed.action, cmd)
+	}
+}
+
 func TestDashboardGenerationShowsConsumerModal(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "nadlimitni.pdf")
 	m := dashboard{
@@ -263,6 +286,60 @@ func TestDashboardViewShowsTaxSummaryBeforeGeneration(t *testing.T) {
 	}
 	if strings.Contains(view, "Enter/g generovat") {
 		t.Fatalf("nápověda stále nabízí generování Enterem:\n%s", view)
+	}
+}
+
+func TestDashboardStatusLineHasFixedHeight(t *testing.T) {
+	base := dashboard{cfg: config.Config{Profile: config.Profile{FirstName: "Jan", LastName: "Novák", VATID: "CZ9001010007"}}, width: 50}
+	withoutNotice := strings.Split(base.View().Content, "\n")
+	base.notice = "Vytvořeno: DPHDP3_2026-09.xml a další soubory, jejichž dlouhý název se nesmí zalomit."
+	withNotice := strings.Split(base.View().Content, "\n")
+
+	wantHeadingLine := -1
+	for i, line := range withoutNotice {
+		if strings.Contains(line, "Zdaňovací období") {
+			wantHeadingLine = i
+			break
+		}
+	}
+	gotHeadingLine := -1
+	for i, line := range withNotice {
+		if strings.Contains(line, "Zdaňovací období") {
+			gotHeadingLine = i
+			break
+		}
+	}
+	if wantHeadingLine < 0 || gotHeadingLine != wantHeadingLine {
+		t.Fatalf("stavová zpráva posunula obsah: bez=%d, se zprávou=%d", wantHeadingLine, gotHeadingLine)
+	}
+	if strings.Count(withNotice[1], "\n") != 0 || !strings.Contains(withNotice[1], "…") {
+		t.Fatalf("dlouhý stav nebyl udržen na jednom zkráceném řádku: %q", withNotice[1])
+	}
+}
+
+func TestDashboardStatusClearsOnNextKeyPress(t *testing.T) {
+	m := dashboard{
+		notice:  "Vytvořeno.",
+		periods: []Period{{Year: 2026, Month: time.August}, {Year: 2026, Month: time.September}},
+	}
+
+	next, _ := m.Update(tea.KeyPressMsg(tea.Key{Code: tea.KeyDown}))
+	updated := next.(dashboard)
+	if updated.notice != "" {
+		t.Fatalf("stavová zpráva po stisku klávesy nezmizela: %q", updated.notice)
+	}
+	if updated.selected != 1 {
+		t.Fatalf("klávesa se po skrytí zprávy neprovedla: selected=%d", updated.selected)
+	}
+}
+
+func TestDashboardReloadReplacesStatusMessage(t *testing.T) {
+	m := dashboard{notice: "Původní zpráva."}
+
+	next, _ := m.Update(tea.KeyPressMsg(tea.Key{Code: 'r', Text: "r"}))
+	updated := next.(dashboard)
+	if updated.notice != "Složka období byla znovu načtena." {
+		t.Fatalf("R má původní stav nahradit novým: %q", updated.notice)
 	}
 }
 

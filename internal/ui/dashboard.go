@@ -18,6 +18,7 @@ import (
 	"dphcko/internal/idoklad"
 	"dphcko/internal/invoice"
 	"dphcko/internal/tax"
+	"github.com/charmbracelet/x/ansi"
 )
 
 type Action int
@@ -60,6 +61,7 @@ type modalKind int
 const (
 	modalNewPeriod modalKind = iota
 	modalIDoklad
+	modalCurrentPeriod
 	modalConsumer
 	modalOverwrite
 )
@@ -110,9 +112,12 @@ func newestPeriodIndex(periods []Period) int {
 func (m dashboard) Init() tea.Cmd { return nil }
 
 func (m dashboard) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	if msg, ok := message.(tea.KeyPressMsg); ok && msg.String() == "ctrl+c" {
-		m.action = ActionQuit
-		return m, tea.Quit
+	if msg, ok := message.(tea.KeyPressMsg); ok {
+		if msg.String() == "ctrl+c" {
+			m.action = ActionQuit
+			return m, tea.Quit
+		}
+		m.notice = ""
 	}
 	if m.modal != nil {
 		return m.updateModal(message)
@@ -138,7 +143,7 @@ func (m dashboard) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return m.openIDokladModal()
 		case "g", "G":
 			if len(m.periods) > 0 {
-				return m.prepareGeneration()
+				return m.prepareGenerationAt(time.Now())
 			}
 		case "r", "R":
 			m.reload()
@@ -211,9 +216,18 @@ func idokladSyncPrompt(lastNumber string) (string, string) {
 	return "Poslední stažený doklad: " + lastNumber, browserInfo + "Potom stáhne všechny doklady s novějším číslem než " + lastNumber + ". Chcete pokračovat?"
 }
 
-func (m dashboard) prepareGeneration() (tea.Model, tea.Cmd) {
+func (m dashboard) prepareGenerationAt(now time.Time) (tea.Model, tea.Cmd) {
 	m.pending = nil
 	m.generate = GenerateOptions{ConsumerDocuments: make(map[string]bool)}
+	period := m.periods[m.selected]
+	if period.Year == now.Year() && period.Month == now.Month() {
+		m.pending = append(m.pending, modalRequest{
+			kind:        modalCurrentPeriod,
+			title:       "Zdaňovací období " + period.String() + " ještě není ukončené.",
+			description: "Faktury přidané později nebudou v tomto výstupu zahrnuté. Opravdu chcete generovat už nyní?",
+			affirmative: "Ano, generovat", negative: "Zrušit",
+		})
+	}
 	for _, result := range m.results {
 		if result.Err == nil {
 			continue
@@ -230,7 +244,6 @@ func (m dashboard) prepareGeneration() (tea.Model, tea.Cmd) {
 		m.notice = fmt.Sprintf("Generování zastaveno: %s: %v", filepath.Base(result.Path), result.Err)
 		return m, nil
 	}
-	period := m.periods[m.selected]
 	existing, err := epo.ExistingPeriodOutputs(period.Dir, period.Year, int(period.Month))
 	if err != nil {
 		m.notice = "Generování nelze připravit: " + err.Error()
@@ -336,6 +349,11 @@ func (m dashboard) completeModal() (tea.Model, tea.Cmd) {
 		}
 		m.action = ActionImportIDoklad
 		return m, tea.Quit
+	case modalCurrentPeriod:
+		if !modal.confirmed {
+			return m.cancelGeneration()
+		}
+		return m.openNextGenerationModal()
 	case modalConsumer:
 		if !modal.confirmed {
 			return m.cancelGeneration()
@@ -367,10 +385,16 @@ func (m dashboard) View() tea.View {
 	selectedStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#F5C451"))
 	muted := lipgloss.NewStyle().Foreground(lipgloss.Color("#888888"))
 	var b strings.Builder
-	fmt.Fprintf(&b, "%s  %s %s · DIČ %s\n\n", title, m.cfg.Profile.FirstName, m.cfg.Profile.LastName, m.cfg.Profile.VATID)
+	fmt.Fprintf(&b, "%s  %s %s · DIČ %s\n", title, m.cfg.Profile.FirstName, m.cfg.Profile.LastName, m.cfg.Profile.VATID)
+	statusLine := ""
 	if m.notice != "" {
-		fmt.Fprintf(&b, "%s\n\n", okStyle.Render(m.notice))
+		statusLine = strings.Join(strings.Fields(m.notice), " ")
+		if m.width > 0 {
+			statusLine = ansi.Truncate(statusLine, m.width, "…")
+		}
+		statusLine = okStyle.Render(statusLine)
 	}
+	b.WriteString(statusLine + "\n")
 	b.WriteString("Zdaňovací období\n")
 	if len(m.periods) == 0 {
 		b.WriteString(muted.Render("  Zatím žádné. Stiskněte n pro založení minulého měsíce.") + "\n")
